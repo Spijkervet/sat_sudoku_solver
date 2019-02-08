@@ -1,5 +1,12 @@
 # SAT solver for Sudoku - Project 1 (SAT)
 
+## Usage
+`./main.py -SN INPUT_FILE`
+
+e.g. for Strategy 2 and test data:
+`./main.py -S2 'test_data/1000\ sudokus.txt'`
+
+
 The deadline for the SAT project will be 1st of March (= the end of week 4 in the course). Details of how to hand in your results will follow. 
 
 ## Part I: building a SAT solver
