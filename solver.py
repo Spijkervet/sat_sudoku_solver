@@ -5,4 +5,4 @@ class Solver():
         pass
 
     def solve(self, clauses):
-        pass
+        print('Total Clauses: {}'.format(len(clauses)))
