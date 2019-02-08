@@ -1,7 +1,5 @@
 # SAT solver for Sudoku - Project 1 (SAT)
 
-Sudoku example
-
 The deadline for the SAT project will be 1st of March (= the end of week 4 in the course). Details of how to hand in your results will follow. 
 
 ## Part I: building a SAT solver
