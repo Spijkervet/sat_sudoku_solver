@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import argparse
-# import pycosat
+import pycosat
 from reader import CNF_Reader
 from converter import Sudoku_CNF
 from grid import create_grid, print_grid
@@ -30,7 +30,6 @@ if __name__ == '__main__':
     print("### STRATEGY: {} ###".format(strategy))
     print("")
 
-    solver = Solver(strategy)
 
     sud_conv = Sudoku_CNF()
     sud_conv.convert(p.input_file)
@@ -39,9 +38,11 @@ if __name__ == '__main__':
         sudoku.read_string(c)
 
         clauses = sudoku_rules.clauses + sudoku.clauses
+        variables = sudoku_rules.variables | sudoku.variables
+        solver = Solver(strategy, clauses, variables)
 
-        solution = solver.solve(clauses)
-        # solution = set(pycosat.solve(clauses))
+        solution = solver.solve()
+        # solution = set(pycosat.solve(merged.clauses))
         if solution is None:
             print("No solution found")
         else:
@@ -52,3 +53,5 @@ if __name__ == '__main__':
         print("CLAUSES: {}".format(len(sudoku.clauses)))
         print("")
         # print_grid(grid)
+        break
+
