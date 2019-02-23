@@ -20,8 +20,8 @@ def main(sudoku, sudoku_rules, strategy):
         clauses = sudoku.clauses
         variables = sudoku.variables
 
-    start_time = time.time()
     solver = Solver(strategy, clauses, variables)
+    start_time = time.time()
     solution = solver.solve()
     print("EXECUTION TIME: {}".format(time.time() - start_time))
 
@@ -32,7 +32,6 @@ def main(sudoku, sudoku_rules, strategy):
         print("Solution found!")
         # print(solver.clauses.clauses)
         print("SOLUTION", len(solution))
-        true_assignments = [s for s in solution if s > 0]
         grid = create_grid(solution)
         print("SPLITS", solver.splits)
         pprint(grid)
@@ -76,7 +75,6 @@ if __name__ == '__main__':
             sudoku = CNF_Reader()
             sudoku.read_string(c)
             main(sudoku, sudoku_rules, strategy)
-            break
     else:
         cnf = CNF_Reader()
         cnf.read(p.input_file)

@@ -14,8 +14,8 @@ def print_grid(board):
 def create_grid(solution):
     grid = [[0 for _ in range(9)] for _ in range(9)]
     for s in solution:
-        if s > 0:
-            tmp = str(s)
+        if s.variable > 0:
+            tmp = str(s.variable)
             row = int(tmp[0]) - 1
             col = int(tmp[1]) - 1
             num = int(tmp[2])

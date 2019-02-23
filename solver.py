@@ -1,123 +1,205 @@
-import random
 from collections import defaultdict
+import random
+import numpy as np
+import time
+
+class Variable():
+
+    def __init__(self, variable):
+        self.variable = variable
+        self.assigned = None
+
+    def __repr__(self):
+        return 'VAR POINTER: ' + str(self.variable)
 
 class Clause():
 
     def __init__(self, clause):
         self.clause = clause
 
+    def __repr__(self):
+        return '[' + ' '.join([str(c) for c in self.clause]) + ']'
+
 class Clauses():
 
-    def __init__(self, clauses):
-        self.clauses = {Clause(c) for c in clauses}
+    def __init__(self, clauses, variables):
+        self.clauses = set()
+        self.variables = variables
         self.dict = defaultdict(set)
-
         for c in clauses:
-            for v in c:
-                self.dict[v].add(Clause(c))
+            var_pointer_clause = set()
+            for i in c:
+                v = self.variables[i]
+                var_pointer_clause.add(v)
+            clause = Clause(var_pointer_clause) # c
+            for v in clause.clause:
+                self.dict[v].add(clause)
+            self.clauses.add(clause)
 
+    def __repr__(self):
+        return ' '.join([str(c) for c in self.clauses])
 
 class Solver():
 
     def __init__(self, strategy, clauses, variables):
-        self.strategy = strategy
         self.clauses = clauses
-        self.clauses_2 = Clauses(clauses)
-        self.variables = variables
+        self.variables_min = variables | set(map(lambda x: -1*x, variables))
+        self.variables = {v: Variable(v) for v in self.variables_min}
         self.splits = 0
         self.assignments = []
+        self.avg_time = 0
+
+    def lookup(self, clauses, variable):
+        var_pointer = self.variables[variable.variable]
+        return clauses.dict[var_pointer]
 
     def solve(self):
-        solution = self.backtracking(self.clauses, self.clauses_2, self.assignments)
+        # print('Total Clauses: {}'.format(len(clauses.clauses)))
+        clauses = Clauses(self.clauses, self.variables)
+        solution = self.backtracking(clauses, self.assignments)
         return solution
 
-    def lookup(self, variable):
-        return self.clauses_2.dict[variable]
+    def remove_tautologies(self):
+        for i, c in enumerate(self.clauses.clauses):
+            count = Counter(list(map(abs,c.clause)))
+            if 2 in count.values():
+                print("TAUTOLOGIE FOUND")
+                self.clauses.clauses[i] = []
+
+    def remove_clauses(self, clause_pointers):
+        self.clauses.clauses -= clause_pointers
+
+    def remove_occurances(self, clauses, literal):
+        for c in clauses:
+            c.clause -= set([literal])
+
+    def bcp(self, clauses, unit):
+        # remove unit
+        modified = set()
+
+        for c in clauses.clauses:
+            if unit in c.clause:
+                continue
+            neg_unit = -1*unit.variable
+            neg_var = self.variables[neg_unit]
+            if neg_var in c.clause:
+                c = Clause([x for x in c.clause if x != neg_var])
+                if len(c.clause) == 0:
+                    return -1
+                modified.add(c)
+            else:
+                modified.add(c)
+
+        # l = self.lookup(clauses, unit)
+        # modified = clauses.clauses - l
+
+        clauses.clauses = modified
+        return clauses
+
+
+    def unit_literal_rule(self, clauses):
+        assignment = []
+        unit_clauses = [clause for clause in clauses.clauses if len(clause.clause) == 1]
+        while len(unit_clauses) > 0:
+            literal = list(unit_clauses[0].clause)[0]
+            clauses = self.bcp(clauses, literal)
+            assignment += [literal]
+            if clauses == -1:
+                return -1, []
+            if not clauses:
+                return clauses, assignment
+
+            unit_clauses = [clause for clause in clauses.clauses if len(clause.clause) == 1]
+            # self.remove_clauses(l)
+
+            # Delete all occurrences of neg_l from all clauses
+            # negative_literal = -1*literal
+            # neg_l = self.lookup(negative_literal)
+            # self.remove_occurances(neg_l, self.variables[negative_literal])
+        return clauses, assignment
+
+    def pure_literal_rule(self, clauses):
+        counter = self.get_counter(clauses)
+        assignment = []
+        pures = []
+        for literal, times in counter.items():
+            neg_lit = self.variables[-literal.variable]
+            if neg_lit not in counter:
+                pures.append(literal)
+
+        for pure in pures:
+            clauses = self.bcp(clauses, pure)
+        assignment += pures
+        return clauses, assignment
+#         has_pure = False
+#         for c in self.clauses.clauses.copy():
+#             for var in c.clause:
+#                 pos_c = var.variable
+#                 neg_c = -1*pos_c
+#                 l = self.lookup(neg_c)
+#                 self.assignments[pos_c].assigned = True
+
+#                 if len(l) == 0:
+#                     delete_pure_literals = self.lookup(pos_c)
+#                     self.remove_clauses(delete_pure_literals)
+#                     has_pure = True
+#         return has_pure
 
     def get_counter(self, clauses):
         counter = {}
-        for clause in clauses:
-            for literal in clause:
-                if literal in counter:
-                    counter[literal] += 1
+        for clause in clauses.clauses:
+            for v in clause.clause:
+                if v in counter:
+                    counter[v] += 1
                 else:
-                    counter[literal] = 1
+                    counter[v] = 1
         return counter
 
     def variable_selection(self, clauses):
         counter = self.get_counter(clauses)
         return random.choice(list(counter))
 
-    def remove_occurances(self, clauses, literal):
-        for c in clauses:
-            try:
-                c.clause.remove(literal)
-            except:
-                pass
-            # c.clause -= set([literal])
-        return clauses
 
-    def bcp(self, clauses, clauses_2, unit):
-        modified = []
-        to_remove = self.lookup(unit)
-        clauses_2.clauses -= to_remove
-        to_remove_neg = self.lookup(-unit)
-        self.remove_occurances(to_remove_neg, -unit)
+    def backtracking(self, clauses, assignments):
+        start_time = time.time()
+        # self.remove_tautologies()
 
-        modified = [c.clause for c in clauses_2.clauses]
-
-        # for clause in clauses:
-        #     if unit in clause: continue
-        #     if -unit in clause:
-        #         c = [x for x in clause if x != -unit]
-        #         if len(c) == 0: return -1
-        #         modified.append(c)
-        #     else:
-        #         modified.append(clause)
-        return modified
-
-    def pure_literal(self, clauses):
-        counter = self.get_counter(clauses)
-        assignment = []
-        pures = []
-        for literal, times in counter.items():
-            if -literal not in counter:
-                pures.append(literal)
-        for pure in pures:
-            clauses = self.bcp(clauses, pure)
-        assignment += pures
-        return clauses, assignment
-
-    def unit_literal(self, clauses, clauses_2):
-        assignment = []
-        unit_clauses = [c for c in clauses if len(c) == 1]
-        while len(unit_clauses) > 0:
-            unit = unit_clauses[0]
-            clauses = self.bcp(clauses, clauses_2, unit[0])
-            assignment += [unit[0]]
-            if clauses == -1:
-                return -1, []
-            if not clauses:
-                return clauses, assignment
-            unit_clauses = [c for c in clauses if len(c) == 1]
-        return clauses, assignment
-
-    def backtracking(self, clauses, clauses_2, assignments):
-        clauses, pure_assignment = self.pure_literal(clauses)
-        clauses, unit_assignment = self.unit_literal(clauses, clauses_2)
-        assignments = assignments + pure_assignment + unit_assignment
+        # Unit Literal Rule
+        clauses, pure_assignments = self.pure_literal_rule(clauses)
+        # print('time', time.time() - start_time)
+        clauses, unit_assignments = self.unit_literal_rule(clauses)
+        assignments = assignments + pure_assignments + unit_assignments
 
         if clauses == -1:
             return []
-        if not clauses:
+        if not clauses.clauses:
             return assignments
 
         variable = self.variable_selection(clauses)
-        solution = self.backtracking(self.bcp(clauses, clauses_2, variable), clauses_2, assignments + [variable])
+        solution = self.backtracking(self.bcp(clauses, variable), assignments + [variable])
+        self.splits += 1
         if not solution:
-            solution = self.backtracking(self.bcp(clauses, clauses_2, -variable), clauses_2, assignments + [-variable])
+            neg_var = self.variables[-variable.variable]
+            solution = self.backtracking(self.bcp(clauses, neg_var), assignments + [neg_var])
         return solution
 
+        # Pure Literal Rule
+        # while True:
+            # if not self.pure_literal_rule():
+                # break
+        # self.pure_literal_rule()
 
+        # Empty S Rule
+        # if len(self.clauses.clauses) == 0:
+            # return True
 
+        # Splitting
+        # self.splits += 1
+        # add_var = self.variable_selection()
+
+        # solution = self.dpll(clauses + [[add_var]], assignments)
+        # if not solution:
+            # solution = self.dpll(clauses + [[-add_var]], assignments)
+        # if solution:
+            # print("SOLUTION FOUND")
 
