@@ -1,17 +1,18 @@
 #!/usr/bin/python
 
 import argparse
-import pycosat
 from reader import CNF_Reader
 from converter import Sudoku_CNF
 from grid import create_grid, print_grid
 from pprint import pprint
 import time
 import os
+import threading
+
 
 from solver import Solver
 
-def main(sudoku, sudoku_rules, strategy):
+def main(sudoku, sudoku_rules, strategy, size):
 
     if sudoku_rules:
         clauses = sudoku_rules.clauses + sudoku.clauses
@@ -32,7 +33,7 @@ def main(sudoku, sudoku_rules, strategy):
         print("Solution found!")
         # print(solver.clauses.clauses)
         print("SOLUTION", len(solution))
-        grid = create_grid(solution)
+        grid = create_grid(solution, size)
         print("SPLITS", solver.splits)
         pprint(grid)
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='SAT solver for Sudoku')
     parser.add_argument('input_file', help='Input file')
-    parser.add_argument('-S', help='Strategy')
+    parser.add_argument('-S', help='Strategy', default=1)
     p = parser.parse_args()
     strategy = p.S
 
@@ -71,10 +72,10 @@ if __name__ == '__main__':
 
         sud_conv = Sudoku_CNF()
         conv = sud_conv.convert(p.input_file)
-        for c in conv:
+        for c, size in conv:
             sudoku = CNF_Reader()
             sudoku.read_string(c)
-            main(sudoku, sudoku_rules, strategy)
+            main(sudoku, sudoku_rules, strategy, size)
     else:
         cnf = CNF_Reader()
         cnf.read(p.input_file)

@@ -11,8 +11,8 @@ def print_grid(board):
             print("+" + "   +"*9)
 
 
-def create_grid(solution):
-    grid = [[0 for _ in range(9)] for _ in range(9)]
+def create_grid(solution, size):
+    grid = [[0 for _ in range(size)] for _ in range(size)]
     for s in solution:
         if s.variable > 0:
             tmp = str(s.variable)
