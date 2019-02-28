@@ -1,5 +1,5 @@
 import random
-from collections import Counter
+from collections import Counter, defaultdict
 
 class Variable():
 
@@ -10,6 +10,10 @@ class Variable():
     def __repr__(self):
         return 'VAR POINTER: ' + str(self.variable)
 
+class Clause():
+
+    def __init__(self, clause):
+        self.clause = clause
 
 class Solver():
 
@@ -17,19 +21,31 @@ class Solver():
         self.strategy = strategy
         self.variables_min = variables | set(map(lambda x: -1*x, variables))
         self.variables = {v: Variable(v) for v in self.variables_min}
+        self.variables_min = {Variable(v) for v in self.variables_min}
 
+
+        self.dict = defaultdict(set)
         self.clauses = self.create_clauses(clauses, variables)
         self.splits = 0
+        self.backtracks = 0
+        self.unit_rule_count = 0
+        self.pure_rule_count = 0
+
         self.assignments = []
 
+        self.counter = Counter()
+
     def create_clauses(self, clauses, variables):
-        new_clauses = []
+        new_clauses = set()
         for c in clauses:
             var_pointer_clause = set()
             for i in c:
                 v = self.variables[i]
                 var_pointer_clause.add(v)
-            new_clauses.append(var_pointer_clause)
+            clause = Clause(var_pointer_clause)
+            for v in clause.clause:
+                self.dict[v].add(clause)
+            new_clauses.add(clause)
         return new_clauses
 
     def solve(self):
@@ -45,58 +61,62 @@ class Solver():
         return m[0]
 
     def get_counter(self, clauses):
-        counter = {}
+        counter = Counter()
         for clause in clauses:
-            for literal in clause:
-                if literal in counter:
-                    counter[literal] += 1
-                else:
-                    counter[literal] = 1
+            for literal in clause.clause:
+                counter[literal] += 1
         return counter
 
-    def variable_selection(self, clauses):
+    def rdlcs(self, clauses):
+        counter = self.get_counter(clauses)
+        choices = random.choices(*zip(*counter.items()))
+        return choices[0]
+
+    def random_selection(self, clauses, assignments):
         counter = self.get_counter(clauses)
         return random.choice(list(counter))
+        # unassigned_vars = self.variables_min - set(assignments)
+        # return random.choice(list(unassigned_vars))
 
     def bcp(self, clauses, unit):
-        modified = []
+        modified = set()
         for clause in clauses:
-            if unit in clause: continue
+            if unit in clause.clause: continue
             neg_unit = self.variables[-unit.variable]
-            if neg_unit in clause:
-                c = [x for x in clause if x != neg_unit]
-                if len(c) == 0: return -1
-                modified.append(c)
+            if neg_unit in clause.clause:
+                c = Clause([x for x in clause.clause if x != neg_unit])
+                if len(c.clause) == 0: return -1
+                modified.add(c)
             else:
-                modified.append(clause)
+                modified.add(clause)
         return modified
 
     def pure_literal(self, clauses):
+        self.pure_rule_count += 1
         counter = self.get_counter(clauses)
-        assignment = []
-        pures = []
+        pure_literals = []
         for literal, times in counter.items():
             neg_literal = self.variables[-literal.variable]
             if neg_literal not in counter:
-                pures.append(literal)
-        for pure in pures:
+                pure_literals.append(literal)
+        for pure in pure_literals:
             clauses = self.bcp(clauses, pure)
-        assignment += pures
-        return clauses, assignment
+        return clauses, pure_literals
 
     def unit_literal(self, clauses):
-        assignment = []
-        unit_clauses = [c for c in clauses if len(c) == 1]
+        self.unit_rule_count += 1
+        unit_literals = []
+        unit_clauses = [c.clause for c in clauses if len(c.clause) == 1]
         while len(unit_clauses) > 0:
             unit = list(unit_clauses[0])[0]
             clauses = self.bcp(clauses, unit)
-            assignment += [unit]
+            unit_literals.append(unit)
             if clauses == -1:
                 return -1, []
             if not clauses:
-                return clauses, assignment
-            unit_clauses = [c for c in clauses if len(c) == 1]
-        return clauses, assignment
+                return clauses, unit_literals
+            unit_clauses = [c.clause for c in clauses if len(c.clause) == 1]
+        return clauses, unit_literals
 
     def backtracking(self, clauses, assignments):
         clauses, pure_assignment = self.pure_literal(clauses)
@@ -108,16 +128,19 @@ class Solver():
         if not clauses:
             return assignments
 
-        if self.strategy == 2:
+        if self.strategy == 1:
+            variable = self.rdlcs(clauses)
+        elif self.strategy == 2:
             variable = self.jeroslaw_wang(clauses)
         else:
-            variable = self.variable_selection(clauses)
+            variable = self.random_selection(clauses, assignments)
 
         variable.flips += 1
-        neg_var = self.variables[-variable.variable]
         self.splits += 1
+        neg_var = self.variables[-variable.variable]
         solution = self.backtracking(self.bcp(clauses, neg_var), assignments + [neg_var])
         if not solution:
+            self.backtracks += 1
             solution = self.backtracking(self.bcp(clauses, variable), assignments + [variable])
         return solution
 
