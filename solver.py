@@ -77,10 +77,19 @@ class Solver():
                 counter[literal] += 1
         return counter
 
+    def dlis(self, clauses):
+        counter = self.get_counter(clauses)
+        return counter.most_common(1)[0][0]
+
     def rdlis(self, clauses):
         counter = self.get_counter(clauses)
         choices = random.choices(*zip(*counter.items()))
         return choices[0]
+
+    def grab_first(self, clauses, assignments):
+        unassigned_vars = self.variables_min - set(assignments)
+        # return list(unassigned_vars)[random.choice(range(0,len(unassigned_vars)))]
+        return list(unassigned_vars)[0]
 
     def random_selection(self, clauses, assignments):
         counter = self.get_counter(clauses)
@@ -139,10 +148,14 @@ class Solver():
             return assignments
 
         if self.strategy == 1:
-            variable = self.rdlis(clauses)
-        elif self.strategy == 2:
-            variable = self.one_sided_jeroslow_wang(clauses)
+            variable = self.grab_first(clauses, assignments)
+        if self.strategy == 2:
+            variable = self.dlis(clauses)
         elif self.strategy == 3:
+            variable = self.rdlis(clauses)
+        elif self.strategy == 4:
+            variable = self.one_sided_jeroslow_wang(clauses)
+        elif self.strategy == 5:
             variable = self.two_sided_jeroslow_wang(clauses)
         else:
             variable = self.random_selection(clauses, assignments)
