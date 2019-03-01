@@ -12,7 +12,7 @@ import csv
 
 from solver import Solver
 
-STRATEGIES = ['Random', 'RDLIS', 'One-Sided Jeroslow-Wang', 'Two-Sided Jeroslow-Wang']
+STRATEGIES = ['Random', 'Grab First', 'DLIS', 'RDLIS', 'One-Sided Jeroslow-Wang', 'Two-Sided Jeroslow-Wang']
 
 
 if __name__ == '__main__':
