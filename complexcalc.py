@@ -1,5 +1,34 @@
 import numpy as np
 import math
+import pandas as pd
+import csv
+
+f = open("results.csv")
+results = csv.reader(f)
+resultDict = {}
+
+print(results)
+
+# for item in results:
+#     resultDict[item[0]] = {results[0][1]:item[1],results[0][2]:item[2], results[0][3]:item[3]}
+
+# for item in resultDict:
+#     print(item)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def readSud(sudoku, size):
     sudokulist = list(sudoku)
@@ -35,4 +64,6 @@ def calculate(sudoku):
                 cpos += countpossibilities(sudoku, i, j,size)
     return len(cpos)
 
-print(calculate(".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8"))
+# print(calculate(".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8"))
+
+

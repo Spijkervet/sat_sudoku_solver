@@ -22,8 +22,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SAT solver for Sudoku')
     parser.add_argument('input_file', help='Input file')
     parser.add_argument('-S', help='Strategy', default=1)
+    parser.add_argument('-O', help='Output file', default='results.csv')
     p = parser.parse_args()
     strategy = int(p.S) - 1
+
+    RESULTS_FILE = p.O
 
     size = 9
 
@@ -74,13 +77,13 @@ if __name__ == '__main__':
         'execution_time': execution_time
     }
 
-    if not os.path.exists('results.csv'):
-        h = open('results.csv', 'w')
+    if not os.path.exists(RESULTS_FILE):
+        h = open(RESULTS_FILE, 'w')
         csv_writer= csv.DictWriter(h, results.keys())
         csv_writer.writeheader()
         h.close()
 
-    csv_handle = open('results.csv', 'a')
+    csv_handle = open(RESULTS_FILE, 'a')
     csv_writer = csv.DictWriter(csv_handle, results.keys())
     csv_writer.writerow(results)
 
