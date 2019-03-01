@@ -38,6 +38,5 @@ class CNF_Reader():
 
 
     def read(self, file_name):
-        assert os.path.isfile(file_name), "File does not exist"
         with open(file_name, 'r') as f:
             self.read_string(f.read())
