@@ -52,11 +52,21 @@ class Solver():
         solution = self.backtracking(self.clauses, self.assignments)
         return solution
 
-    def jeroslaw_wang(self, clauses):
+    def one_sided_jeroslow_wang(self, clauses):
         counter = Counter()
         for clause in clauses:
-            for literal in clause:
-                counter[literal] += 2**len(clause)
+            for literal in clause.clause:
+                abs_literal = abs(literal.variable)
+                abs_var = self.variables[abs_literal]
+                counter[abs_var] += 2**-len(clause.clause)
+        m = counter.most_common(1)[0]
+        return m[0]
+
+    def two_sided_jeroslow_wang(self, clauses):
+        counter = Counter()
+        for clause in clauses:
+            for literal in clause.clause:
+                counter[literal] += 2**-len(clause.clause)
         m = counter.most_common(1)[0]
         return m[0]
 
@@ -67,7 +77,7 @@ class Solver():
                 counter[literal] += 1
         return counter
 
-    def rdlcs(self, clauses):
+    def rdlis(self, clauses):
         counter = self.get_counter(clauses)
         choices = random.choices(*zip(*counter.items()))
         return choices[0]
@@ -129,14 +139,17 @@ class Solver():
             return assignments
 
         if self.strategy == 1:
-            variable = self.rdlcs(clauses)
+            variable = self.rdlis(clauses)
         elif self.strategy == 2:
-            variable = self.jeroslaw_wang(clauses)
+            variable = self.one_sided_jeroslow_wang(clauses)
+        elif self.strategy == 3:
+            variable = self.two_sided_jeroslow_wang(clauses)
         else:
             variable = self.random_selection(clauses, assignments)
 
         variable.flips += 1
         self.splits += 1
+        print(self.splits)
         neg_var = self.variables[-variable.variable]
         solution = self.backtracking(self.bcp(clauses, neg_var), assignments + [neg_var])
         if not solution:
