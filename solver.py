@@ -149,7 +149,6 @@ class Solver():
 
         variable.flips += 1
         self.splits += 1
-        print(self.splits)
         neg_var = self.variables[-variable.variable]
         solution = self.backtracking(self.bcp(clauses, neg_var), assignments + [neg_var])
         if not solution:
