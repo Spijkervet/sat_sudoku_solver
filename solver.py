@@ -88,6 +88,7 @@ class Solver():
 
     def grab_first(self, clauses, assignments):
         unassigned_vars = self.variables_min - set(assignments)
+        # return list(unassigned_vars)[random.choice(range(0,len(unassigned_vars)))]
         return list(unassigned_vars)[0]
 
     def random_selection(self, clauses, assignments):
