@@ -1,0 +1,2 @@
+file_name,strategy,splits,backtracks,clauses,variables,givens,unit_rule,pure_rule,execution_time
+cnf/sudoku/damnhard.sdk.txt/29.txt,Random,6,5,12005,729,17,12,12,3.5219461917877197
