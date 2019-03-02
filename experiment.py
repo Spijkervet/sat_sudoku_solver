@@ -1,9 +1,9 @@
 import os
 import sys
+from tqdm import tqdm
 
 DIR = sys.argv[1]
 for root, subdirs, files in os.walk(DIR):
-    for f in files:
+    for f in tqdm(files):
         p = os.path.join(root, f)
-        print("RUNNING", p)
-        os.system('python3.6 SAT -S2 -Oresults_grab_first.csv ' + p)
+        os.system('python3 SAT -S2 -Oresults_grab_first_1000.csv ' + p)
