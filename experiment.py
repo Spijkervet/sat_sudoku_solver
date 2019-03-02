@@ -6,4 +6,4 @@ for root, subdirs, files in os.walk(DIR):
     for f in files:
         p = os.path.join(root, f)
         print("RUNNING", p)
-        os.system('python3.6 SAT -S2 -Oresults_rdlis.csv ' + p)
+        os.system('python3.6 SAT -S2 -Oresults_grab_first.csv ' + p)
