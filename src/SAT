@@ -18,6 +18,22 @@ if sys.version_info[1] < 6:
 STRATEGIES = ['Random', 'Grab First', 'DLIS', 'RDLIS', 'One-Sided Jeroslow-Wang', 'Two-Sided Jeroslow-Wang']
 
 
+def export_dimacs(file_path, assignments):
+    num_variables = len(set(abs(a.variable) for a in assignments))
+    num_clauses = len(assignments)
+    contents = 'c\n'
+    contents += 'p cnf {} {}\n'.format(num_variables, num_clauses)
+    for a in assignments:
+        contents += '{} 0\n'.format(a.variable)
+    s_file = open(file_path, 'w')
+    s_file.write(contents)
+    s_file.close()
+
+    print("")
+    print("SOLUTION WRITTEN TO {}".format(os.path.basename(file_path)))
+    print("")
+
+
 if __name__ == '__main__':
     print("SAT SUDOKU SOLVER")
     print("_______________________\n")
@@ -31,6 +47,7 @@ if __name__ == '__main__':
     strategy = int(p.S) - 1
 
     RESULTS_FILE = os.path.join(p.D, p.O)
+    OUTPUT_FILE = os.path.join(p.D, os.path.splitext(p.input_file)[0] + '.out')
 
     size = 9
 
@@ -75,13 +92,7 @@ if __name__ == '__main__':
             print([v.variable for v in solution])
             print()
 
-        s_file = open(os.path.join(p.D, 'solution.cnf'), 'w')
-        s_file.write(' '.join([str(v.variable) for v in solution]))
-        s_file.close()
-
-        print()
-        print("SOLUTION WRITTEN TO solution.cnf")
-        print("")
+    export_dimacs(OUTPUT_FILE, solution)
 
     results = {
         'file_name': p.input_file,
