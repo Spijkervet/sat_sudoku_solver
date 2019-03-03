@@ -1,4 +1,0 @@
-file_name,strategy,splits,backtracks,clauses,variables,givens,pos,neg,unit_rule,pure_rule,execution_time
-/data/0.txt,DLIS,4,3,12009,729,21,6139,29462,8,8,2.208442211151123
-/data/5.txt,DLIS,48,47,12010,729,22,65150,148222,96,96,2.940795660018921
-/data/0.txt,Random,4,2,12009,729,21,5282,27255,7,7,2.187734842300415
