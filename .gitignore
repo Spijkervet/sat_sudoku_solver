@@ -2,3 +2,5 @@ __pycache__
 *.pyc
 test_data/cnf/sudoku/*
 .ipynb_checkpoints
+*.out
+results.csv

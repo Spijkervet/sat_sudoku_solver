@@ -1,3 +1,0 @@
-file_name,strategy,splits,backtracks,clauses,variables,givens,pos,neg,unit_rule,pure_rule,execution_time
-/data/simple_v3_c2.cnf,Random,1,0,2,3,-1,5,3,2,2,6.151199340820312e-05
-/data/simple_v3_c2.cnf,Random,1,0,2,3,-1,5,3,2,2,5.984306335449219e-05
