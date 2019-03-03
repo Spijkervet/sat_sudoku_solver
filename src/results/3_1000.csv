@@ -1,0 +1,5 @@
+file_name,strategy,splits,backtracks,clauses,variables,givens,pos,neg,unit_rule,pure_rule,execution_time
+/Users/spijkervet/Desktop/test_data/cnf/sudoku/1000-sudokus.txt/289.txt,DLIS,0,0,12012,729,24,2940,23328,1,1,2.157280921936035
+/Users/spijkervet/Desktop/test_data/cnf/sudoku/1000-sudokus.txt/504.txt,DLIS,66,65,12013,729,25,82856,180587,132,132,3.287241220474243
+/Users/spijkervet/Desktop/test_data/cnf/sudoku/1000-sudokus.txt/262.txt,DLIS,148,147,12012,729,24,200396,399250,296,296,4.607174873352051
+/Users/spijkervet/Desktop/test_data/cnf/sudoku/1000-sudokus.txt/276.txt,DLIS,277,275,12012,729,24,369544,688304,553,553,7.963196754455566

@@ -30,10 +30,8 @@ class CNF_Reader():
                 # Only do something with normal clauses now
                 if l[-1] == '0':
                     cl = [int(l) for l in l.split()[:-1]]
-                    # cl2 = [(abs(int(l)), True) if int(l) > 0 else (abs(int(l)), False) for l in l.split()[:-1]]
-                    self.num_variables = max([abs(l) for l in cl] + [self.num_variables])
                     self.variables.update([abs(l) for l in cl])
-                    self.clauses.append(cl) #cl2
+                    self.clauses.append(cl)
 
 
 

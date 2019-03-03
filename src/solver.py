@@ -30,10 +30,9 @@ class Solver():
         self.backtracks = 0
         self.unit_rule_count = 0
         self.pure_rule_count = 0
+        self.pos_neg = Counter()
 
         self.assignments = []
-
-        self.unassigned_variables = Counter()
 
     def create_clauses(self, clauses, variables):
         new_clauses = set()
@@ -75,6 +74,10 @@ class Solver():
         for clause in clauses:
             for literal in clause.clause:
                 c[literal] += 1
+                if literal.variable > 0:
+                    self.pos_neg['pos'] += 1
+                else:
+                    self.pos_neg['neg'] += 1
         return c
 
     def dlis(self, clauses):
