@@ -1,92 +1,26 @@
-#!/usr/local/bin/python3
-
-import argparse
-from reader import CNF_Reader
-from converter import Sudoku_CNF
-from grid import create_grid, print_grid
-from pprint import pprint
-import time
+#!/usr/bin/python
 import os
-import threading
-import csv
+import argparse
 
-from solver import Solver
+TAG = 'vu/sudosat:1.0.0'
+MNT = '/data'
+DIR = os.path.abspath('./')
 
-STRATEGIES = ['Random', 'Grab First', 'DLIS', 'RDLIS', 'One-Sided Jeroslow-Wang', 'Two-Sided Jeroslow-Wang']
+parser = argparse.ArgumentParser(description='SAT solver for Sudoku')
+parser.add_argument('input_file', help='Input file')
+parser.add_argument('-S', help='Strategy', default=1)
+parser.add_argument('-O', help='Output file', default='results.csv')
+parser.add_argument('-D', help='Mount directory', default=MNT)
+p = parser.parse_args()
 
+FILE_DIR = p.input_file
+FILE = os.path.basename(p.input_file)
+NEW_FILE_DIR = os.path.join(DIR, FILE)
 
-if __name__ == '__main__':
-    print("SAT SUDOKU SOLVER")
-    print("_______________________\n")
+os.system('cd src && docker build -t {} .'.format(TAG))
+os.system('cp {} {}'.format(FILE_DIR, NEW_FILE_DIR))
 
-    parser = argparse.ArgumentParser(description='SAT solver for Sudoku')
-    parser.add_argument('input_file', help='Input file')
-    parser.add_argument('-S', help='Strategy', default=1)
-    parser.add_argument('-O', help='Output file', default='results.csv')
-    p = parser.parse_args()
-    strategy = int(p.S) - 1
-
-    RESULTS_FILE = p.O
-
-    size = 9
-
-    print("### STRATEGY: {} ###".format(STRATEGIES[strategy]))
-    print("")
-    sudoku = CNF_Reader(size)
-    sudoku.read(p.input_file)
-
-    clauses = sudoku.clauses
-    variables = sudoku.variables
-    givens = sudoku.givens
-
-
-    solver = Solver(strategy, clauses, variables)
-    start_time = time.time()
-    solution = solver.solve()
-    execution_time = time.time() - start_time
-    print("EXECUTION TIME: {}".format(execution_time))
-
-    # solution = set(pycosat.solve(merged.clauses))
-    if solution is False:
-        print("No solution found")
-    else:
-        print("Solution found!")
-        try:
-            grid = create_grid(solution, size)
-            pprint(grid)
-        except:
-            pass
-        print("### SPLITS {}, BACKTRACKS {} ###".format(solver.splits, solver.backtracks))
-
-    print("### SUDOKU ###")
-    print("VARIABLES: {}".format(sudoku.num_variables))
-    print("CLAUSES: {}".format(len(sudoku.clauses)))
-    print("GIVENS: {}".format(givens))
-    print("")
-
-    results = {
-        'file_name': p.input_file,
-        'strategy': STRATEGIES[strategy],
-        'splits': solver.splits,
-        'backtracks': solver.backtracks,
-        'clauses': len(clauses),
-        'variables': len(variables),
-        'givens': givens,
-        'unit_rule': solver.unit_rule_count,
-        'pure_rule': solver.pure_rule_count,
-        'execution_time': execution_time
-    }
-
-    if not os.path.exists(RESULTS_FILE):
-        h = open(RESULTS_FILE, 'w')
-        csv_writer= csv.DictWriter(h, results.keys())
-        csv_writer.writeheader()
-        h.close()
-
-    csv_handle = open(RESULTS_FILE, 'a')
-    csv_writer = csv.DictWriter(csv_handle, results.keys())
-    csv_writer.writerow(results)
-
-
-
+print("### RUNNING DOCKERIZED SAT SOLVER ###")
+os.system('docker run -v {}:{} {} ./SAT {}/{} -S{} -O{} -D{}'.format(DIR, MNT, TAG, MNT, FILE, p.S, p.O, p.D))
+os.system('rm {}'.format(NEW_FILE_DIR))
 

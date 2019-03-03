@@ -1,5 +1,4 @@
 import random
-import numpy as np
 from collections import Counter, defaultdict
 
 class Variable():
@@ -7,6 +6,7 @@ class Variable():
     def __init__(self, variable):
         self.variable = variable
         self.flips = 0
+        self.assigned = True
 
     def __repr__(self):
         return 'VAR POINTER: ' + str(self.variable)
@@ -24,8 +24,7 @@ class Solver():
         self.variables = {v: Variable(v) for v in self.variables_min}
         self.variables_min = {Variable(v) for v in self.variables_min}
 
-
-        self.dict = defaultdict(set)
+        self.inverted_index = defaultdict(set)
         self.clauses = self.create_clauses(clauses, variables)
         self.splits = 0
         self.backtracks = 0
@@ -34,7 +33,7 @@ class Solver():
 
         self.assignments = []
 
-        self.counter = Counter()
+        self.unassigned_variables = Counter()
 
     def create_clauses(self, clauses, variables):
         new_clauses = set()
@@ -45,46 +44,46 @@ class Solver():
                 var_pointer_clause.add(v)
             clause = Clause(var_pointer_clause)
             for v in clause.clause:
-                self.dict[v].add(clause)
+                self.inverted_index[v].add(clause)
             new_clauses.add(clause)
         return new_clauses
 
     def solve(self):
-        solution = self.backtracking(self.clauses, self.assignments)
+        solution = self.backtrack(self.clauses, self.assignments)
         return solution
 
     def one_sided_jeroslow_wang(self, clauses):
-        counter = Counter()
+        unassigned_variables = Counter()
         for clause in clauses:
             for literal in clause.clause:
                 abs_literal = abs(literal.variable)
                 abs_var = self.variables[abs_literal]
-                counter[abs_var] += 2**-len(clause.clause)
-        m = counter.most_common(1)[0]
+                unassigned_variables[abs_var] += 2**-len(clause.clause)
+        m = unassigned_variables.most_common(1)[0]
         return m[0]
 
     def two_sided_jeroslow_wang(self, clauses):
-        counter = Counter()
+        unassigned_variables = Counter()
         for clause in clauses:
             for literal in clause.clause:
-                counter[literal] += 2**-len(clause.clause)
-        m = counter.most_common(1)[0]
+                unassigned_variables[literal] += 2**-len(clause.clause)
+        m = unassigned_variables.most_common(1)[0]
         return m[0]
 
-    def get_counter(self, clauses):
-        counter = Counter()
+    def get_unassigned_variables(self, clauses):
+        c = Counter()
         for clause in clauses:
             for literal in clause.clause:
-                counter[literal] += 1
-        return counter
+                c[literal] += 1
+        return c
 
     def dlis(self, clauses):
-        counter = self.get_counter(clauses)
-        return counter.most_common(1)[0][0]
+        unassigned_variables = self.get_unassigned_variables(clauses)
+        return unassigned_variables.most_common(1)[0][0]
 
     def rdlis(self, clauses):
-        counter = self.get_counter(clauses)
-        choices = random.choices(*zip(*counter.items()))
+        unassigned_variables = self.get_unassigned_variables(clauses)
+        choices = random.choices(*zip(*unassigned_variables.items()))
         return choices[0]
 
     def grab_first(self, clauses, assignments):
@@ -93,31 +92,31 @@ class Solver():
         return list(unassigned_vars)[0]
 
     def random_selection(self, clauses, assignments):
-        counter = self.get_counter(clauses)
-        return random.choice(list(counter))
+        unassigned_variables = self.get_unassigned_variables(clauses)
+        return random.choice(list(unassigned_variables))
         # unassigned_vars = self.variables_min - set(assignments)
         # return random.choice(list(unassigned_vars))
 
     def bcp(self, clauses, unit):
-        modified = set()
+        copy = set()
         for clause in clauses:
             if unit in clause.clause: continue
             neg_unit = self.variables[-unit.variable]
             if neg_unit in clause.clause:
                 c = Clause([x for x in clause.clause if x != neg_unit])
-                if len(c.clause) == 0: return -1
-                modified.add(c)
+                if len(c.clause) == 0: return None
+                copy.add(c)
             else:
-                modified.add(clause)
-        return modified
+                copy.add(clause)
+        return copy
 
     def pure_literal(self, clauses):
         self.pure_rule_count += 1
-        counter = self.get_counter(clauses)
+        unassigned_variables = self.get_unassigned_variables(clauses)
         pure_literals = []
-        for literal, times in counter.items():
+        for literal, times in unassigned_variables.items():
             neg_literal = self.variables[-literal.variable]
-            if neg_literal not in counter:
+            if neg_literal not in unassigned_variables:
                 pure_literals.append(literal)
         for pure in pure_literals:
             clauses = self.bcp(clauses, pure)
@@ -131,19 +130,19 @@ class Solver():
             unit = list(unit_clauses[0])[0]
             clauses = self.bcp(clauses, unit)
             unit_literals.append(unit)
-            if clauses == -1:
-                return -1, []
+            if clauses == None:
+                return None, []
             if not clauses:
                 return clauses, unit_literals
             unit_clauses = [c.clause for c in clauses if len(c.clause) == 1]
         return clauses, unit_literals
 
-    def backtracking(self, clauses, assignments):
+    def backtrack(self, clauses, assignments):
         clauses, pure_assignment = self.pure_literal(clauses)
         clauses, unit_assignment = self.unit_literal(clauses)
         assignments = assignments + pure_assignment + unit_assignment
 
-        if clauses == -1:
+        if clauses == None:
             return []
         if not clauses:
             return assignments
@@ -164,12 +163,8 @@ class Solver():
         self.splits += 1
         variable.flips += 1
         neg_var = self.variables[-variable.variable]
-        solution = self.backtracking(self.bcp(clauses, neg_var), assignments + [neg_var])
+        solution = self.backtrack(self.bcp(clauses, neg_var), assignments + [neg_var])
         if not solution:
-            solution = self.backtracking(self.bcp(clauses, variable), assignments + [variable])
+            solution = self.backtrack(self.bcp(clauses, variable), assignments + [variable])
             self.backtracks += 1
         return solution
-
-
-
-

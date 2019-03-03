@@ -1,15 +1,27 @@
 # SAT solver for Sudoku - Project 1 (SAT)
 
 ## Usage
-`./main.py -SN INPUT_FILE`
+The following script will run a Dockerized instance of the SAT solver:
+`./SAT -SN INPUT_FILE`
 
-e.g. for Strategy 2 and test data:
-`./main.py -S2 'test_data/1000\ sudokus.txt'`
+If this does not work, go into the `./src` folder and run `./SAT -SN INPUT_FILE` to directly call the Python (3.6) sript.
+
+e.g. for Strategy 2:
+`./main.py -S2 'sudoku.cnf'`
+
+## Strategies
+The following strategies are implemented (with their corresponding -S flags):
+- Random (1)
+- Grab First (2)
+- DLIS (3)
+- RDLIS (4)
+- One-Sided Jeroslow-Wang (5)
+- Two-Sided Jeroslow-Wang (6)
 
 
 The deadline for the SAT project will be 1st of March (= the end of week 4 in the course). Details of how to hand in your results will follow. 
 
-## Part I: building a SAT solver
+### Part I: building a SAT solver
 
 Your challenge is to write a SAT solver, and then use it to solve Sudoku problems. If you are unfamiliar with the rules of a Sudoku puzzle, read up on them here,  (Links to an external site.)Links to an external site.or many other places on the Web.
 
@@ -28,7 +40,7 @@ We give you a collection of 22000 Sudoku's (Links to an external site.)Links to 
 You are free to choose any programming language you fancy, but we must be able to run your SAT solver with the command SAT -Sn inputfile , for example: SAT -S2 sudoku_nr_10 , where SAT is the (compulsory) name of your program, n=1 for the basic DP and n=2 or 3 for your two other strategies, and the input file is the concatenation of all required input clauses (in your case: sudoku rules + given puzzle). 
 
 
-## Part II: experiment
+### Part II: experiment
 
 After you've implemented your SAT solver, we want you to formulate some hypothesis about its behaviour, and then design and execute an experiment to test this hypothesis. 
 
@@ -46,7 +58,7 @@ A note on runtime: we don't care about the actual runtime, which will depend on 
 
 Points are awarded for the originality of your hypothesis and for the thoroughness of the design and execution of your experiment. 
 
-## Part III: report
+### Part III: report
 
 Write a report of max 5 pages where you describe
 1. the important design decisions for your SAT solver (both how and why)
@@ -58,7 +70,7 @@ Write a report of max 5 pages where you describe
 
 Points are awarded for clarity of your argumentation, and quality of the writing and presentation. 
 
-## What to hand in
+### What to hand in
 
 You hand in a single zip-file with 
 - all your source code, plus a compiled and executable version of your 'SAT' program (as per the specs above)

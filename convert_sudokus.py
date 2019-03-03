@@ -1,13 +1,13 @@
 import os
-from converter import Sudoku_CNF
-from reader import CNF_Reader
+from src.converter import Sudoku_CNF
+from src.reader import CNF_Reader
 
 
 SUDOKU_PATH = 'test_data'
-OUTPUT_PATH = 'cnf/sudoku'
+OUTPUT_PATH = 'test_data/cnf/sudoku'
 
 
-sudoku_rules = open('./cnf/sudoku-rules.cnf', 'r').read()
+sudoku_rules = open('./test_data/cnf/sudoku-rules.cnf', 'r').read()
 
 for root, subdirs, files in os.walk(SUDOKU_PATH):
     for f in files:

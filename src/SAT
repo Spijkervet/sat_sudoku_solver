@@ -1,0 +1,107 @@
+#!/usr/local/bin/python3
+
+import argparse
+from reader import CNF_Reader
+from converter import Sudoku_CNF
+from grid import create_grid, print_grid
+from pprint import pprint
+import time
+import os
+import sys
+import csv
+
+from solver import Solver
+
+if sys.version_info[1] < 6:
+    raise Exception("You must use at least Python 3.6")
+
+STRATEGIES = ['Random', 'Grab First', 'DLIS', 'RDLIS', 'One-Sided Jeroslow-Wang', 'Two-Sided Jeroslow-Wang']
+
+
+if __name__ == '__main__':
+    print("SAT SUDOKU SOLVER")
+    print("_______________________\n")
+
+    parser = argparse.ArgumentParser(description='SAT solver for Sudoku')
+    parser.add_argument('input_file', help='Input file')
+    parser.add_argument('-S', help='Strategy', default=1)
+    parser.add_argument('-O', help='Output file', default='results.csv')
+    parser.add_argument('-D', help='Mount directory', default='./')
+    p = parser.parse_args()
+    strategy = int(p.S) - 1
+
+    RESULTS_FILE = os.path.join(p.D, p.O)
+
+    size = 9
+
+    print("### STRATEGY: {} ###".format(STRATEGIES[strategy]))
+    print("")
+    sudoku = CNF_Reader(size)
+    sudoku.read(p.input_file)
+
+    clauses = sudoku.clauses
+    variables = sudoku.variables
+    givens = sudoku.givens
+
+
+    solver = Solver(strategy, clauses, variables)
+    start_time = time.time()
+    solution = solver.solve()
+    execution_time = time.time() - start_time
+    print("EXECUTION TIME: {}".format(execution_time))
+    print("VARIABLES: {}".format(sudoku.num_variables))
+    print("CLAUSES: {}".format(len(sudoku.clauses)))
+    print("GIVENS: {}".format(givens))
+    print("SPLITS {}, BACKTRACKS {}".format(solver.splits, solver.backtracks))
+    print()
+
+    if not len(solution):
+        print("No solution found")
+    else:
+        print("Solution found!")
+        try:
+            grid = create_grid(solution, size)
+            pprint(grid)
+            print()
+            print()
+        except Exception as e:
+            pass
+
+        if len(solution) > 50:
+            print("SOLUTION CONTAINS MORE THAN 50 LITERALS, WRITING TO FILE")
+        else:
+            print()
+            print("SOLUTION")
+            print([v.variable for v in solution])
+            print()
+
+        s_file = open(os.path.join(p.D, 'solution.cnf'), 'w')
+        s_file.write(' '.join([str(v.variable) for v in solution]))
+        s_file.close()
+
+        print()
+        print("SOLUTION WRITTEN TO solution.cnf")
+        print("")
+
+    results = {
+        'file_name': p.input_file,
+        'strategy': STRATEGIES[strategy],
+        'splits': solver.splits,
+        'backtracks': solver.backtracks,
+        'clauses': len(clauses),
+        'variables': len(variables),
+        'givens': givens,
+        'unit_rule': solver.unit_rule_count,
+        'pure_rule': solver.pure_rule_count,
+        'execution_time': execution_time
+    }
+
+    if not os.path.exists(RESULTS_FILE):
+        h = open(RESULTS_FILE, 'w')
+        csv_writer= csv.DictWriter(h, results.keys())
+        csv_writer.writeheader()
+        h.close()
+
+    csv_handle = open(RESULTS_FILE, 'a')
+    csv_writer = csv.DictWriter(csv_handle, results.keys())
+    csv_writer.writerow(results)
