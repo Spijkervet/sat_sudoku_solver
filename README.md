@@ -6,8 +6,8 @@ The following script will run a Dockerized instance of the SAT solver:
 
 If this does not work, go into the `./src` folder and run `./SAT -SN INPUT_FILE` to directly call the Python (3.6) sript.
 
-e.g. for Strategy 2:
-`./main.py -S2 'sudoku.cnf'`
+Or e.g. for Strategy 2:
+`./src/SAT -S2 'sudoku.cnf'`
 
 ## Strategies
 The following strategies are implemented (with their corresponding -S flags):
