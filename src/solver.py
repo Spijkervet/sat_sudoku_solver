@@ -164,10 +164,10 @@ class Solver():
             variable = self.random_selection(clauses, assignments)
 
         self.splits += 1
-        variable.flips += 1
-        neg_var = self.variables[-variable.variable]
-        solution = self.backtrack(self.bcp(clauses, neg_var), assignments + [neg_var])
+        solution = self.backtrack(self.bcp(clauses, variable), assignments + [variable])
         if not solution:
-            solution = self.backtrack(self.bcp(clauses, variable), assignments + [variable])
+            variable.flips += 1
+            neg_var = self.variables[-variable.variable]
+            solution = self.backtrack(self.bcp(clauses, neg_var), assignments + [neg_var])
             self.backtracks += 1
         return solution
